@@ -1,3 +1,14 @@
+FROM composer:2.8 AS build
+
+WORKDIR /app
+
+COPY . .
+
+RUN composer install --prefer-dist --no-interaction --no-dev
+RUN npm ci
+RUN npm run build
+RUN php artisan storage:link
+
 FROM php:8.2-apache
 
 WORKDIR /app
@@ -15,17 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd pdo pdo_pgsql bcmath mbstring
+RUN docker-php-ext-install pdo pdo_pgsql bcmath mbstring gd
 
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-COPY . .
-
-RUN composer install --prefer-dist --no-interaction --no-dev
-RUN npm ci
-RUN npm run build
-RUN php artisan storage:link
+COPY --from=build /app /app
 
 EXPOSE 80
 
