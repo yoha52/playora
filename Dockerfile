@@ -7,7 +7,19 @@ RUN apt-get update && apt-get install -y \
     curl \
     zip \
     unzip \
-    mariadb-client
+    libpq-dev \
+    postgresql-client
+
+RUN docker-php-ext-install \
+    pdo \
+    pdo_pgsql \
+    bcmath \
+    ctype \
+    json \
+    mbstring \
+    openssl \
+    tokenizer \
+    xml
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
@@ -18,6 +30,7 @@ COPY . .
 RUN composer install --prefer-dist --no-interaction
 RUN npm ci
 RUN npm run build
+RUN php artisan storage:link
 
 EXPOSE 8000
 
