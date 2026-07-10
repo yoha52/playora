@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY . .
 
+RUN apk add --no-cache libexif-dev
+RUN docker-php-ext-install exif
 RUN composer install --prefer-dist --no-interaction --no-dev
 RUN npm ci
 RUN npm run build
@@ -20,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install pdo pdo_pgsql bcmath gd
+RUN docker-php-ext-install pdo pdo_pgsql bcmath gd exif
 
 COPY --from=build /app /app
 
