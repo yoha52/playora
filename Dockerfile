@@ -1,37 +1,35 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    postgresql-client \
     git \
     curl \
     zip \
     unzip \
-    libpq-dev \
-    postgresql-client
+    nodejs \
+    npm && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN docker-php-ext-install \
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql && \
+    docker-php-ext-install -j$(nproc) \
     pdo \
     pdo_pgsql \
     bcmath \
-    ctype \
-    json \
-    mbstring \
-    openssl \
-    tokenizer \
-    xml
+    mbstring
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs
-
 COPY . .
 
-RUN composer install --prefer-dist --no-interaction
+RUN composer install --prefer-dist --no-interaction --no-dev
 RUN npm ci
 RUN npm run build
 RUN php artisan storage:link
 
 EXPOSE 8000
 
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
