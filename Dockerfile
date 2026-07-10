@@ -8,6 +8,8 @@ RUN apt-get update \
         curl \
         zip \
         unzip \
+        ca-certificates \
+        gnupg \
         libpq-dev \
         libpng-dev \
         libjpeg-dev \
@@ -15,6 +17,10 @@ RUN apt-get update \
         zlib1g-dev \
         libzip-dev \
         libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-install pdo pdo_pgsql bcmath gd exif zip mbstring
