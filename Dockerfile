@@ -32,8 +32,7 @@ RUN composer install --prefer-dist --no-interaction --no-dev
 RUN npm ci
 RUN npm run build
 RUN mkdir -p storage/app/public storage/app/private storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && if [ ! -f .env ]; then cp .env.example .env; fi
+    && chmod -R 775 storage bootstrap/cache
 RUN php artisan key:generate --ansi --force || true
 RUN php artisan storage:link || true
 
