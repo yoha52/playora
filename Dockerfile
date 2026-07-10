@@ -15,12 +15,15 @@ FROM serversideup/php:8.2-fpm-nginx
 
 WORKDIR /app
 
-RUN mkdir -p /var/lib/apt/lists/partial && chmod 755 /var/lib/apt/lists/partial \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends libpq-dev libpng-dev libjpeg-dev libfreetype6-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    postgresql-dev \
+    libpng-dev \
+    jpeg-dev \
+    freetype-dev \
+    libzip-dev \
+    exif-dev
 
-RUN docker-php-ext-install pdo pdo_pgsql bcmath gd exif
+RUN docker-php-ext-install pdo pdo_pgsql bcmath gd exif zip
 
 COPY --from=build /app /app
 
