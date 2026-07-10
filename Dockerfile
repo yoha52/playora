@@ -1,4 +1,4 @@
-FROM composer:2.8-bookworm AS build
+FROM composer:2.8 AS build
 
 WORKDIR /app
 
