@@ -73,7 +73,32 @@ Route::middleware(['installed'])->group(function () {
                 abort(404);
             }
 
-            $result = ['app' => 'running'];
+            $result = [
+                'app' => 'running',
+                'env' => env('APP_ENV'),
+                'app_debug' => env('APP_DEBUG'),
+            ];
+
+            $result['env_file'] = file_exists(base_path('.env')) ? 'present' : 'missing';
+            $result['app_key_env'] = env('APP_KEY') ? 'set' : 'missing';
+            $result['app_key_config'] = config('app.key') ?: null;
+
+            // storage writable test
+            try {
+                $testPath = storage_path('debug_write_test.txt');
+                file_put_contents($testPath, date('c'));
+                if (file_exists($testPath)) {
+                    unlink($testPath);
+                    $result['storage_writable'] = true;
+                } else {
+                    $result['storage_writable'] = false;
+                }
+            } catch (\Throwable $e) {
+                $result['storage_writable'] = false;
+                $result['storage_write_error'] = $e->getMessage();
+            }
+
+            $result['db_connection_env'] = env('DB_CONNECTION');
 
             try {
                 \Illuminate\Support\Facades\DB::connection()->getPdo();
