@@ -66,21 +66,25 @@ Route::middleware(['installed'])->group(function () {
 });
 
     // Temporary protected debug endpoint — set DEBUG_TOKEN in Render and call /_debug?token=YOUR_TOKEN
-    Route::get('/_debug', function (Illuminate\Http\Request $request) {
-        $token = env('DEBUG_TOKEN');
-        if (empty($token) || $request->query('token') !== $token) {
-            abort(404);
-        }
-
-        $result = ['app' => 'running'];
-
+    Route::get('/_debug', function () {
         try {
-            \Illuminate\Support\Facades\DB::connection()->getPdo();
-            $result['database'] = 'ok';
-        } catch (\Exception $e) {
-            $result['database'] = 'error';
-            $result['db_message'] = $e->getMessage();
-        }
+            $token = env('DEBUG_TOKEN');
+            if (empty($token) || request()->query('token') !== $token) {
+                abort(404);
+            }
 
-        return response()->json($result);
+            $result = ['app' => 'running'];
+
+            try {
+                \Illuminate\Support\Facades\DB::connection()->getPdo();
+                $result['database'] = 'ok';
+            } catch (\Throwable $e) {
+                $result['database'] = 'error';
+                $result['db_message'] = $e->getMessage();
+            }
+
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()], 500);
+        }
     });
