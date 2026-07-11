@@ -64,3 +64,23 @@ Route::middleware(['installed'])->group(function () {
 
     require __DIR__.'/auth.php';
 });
+
+    // Temporary protected debug endpoint — set DEBUG_TOKEN in Render and call /_debug?token=YOUR_TOKEN
+    Route::get('/_debug', function (Illuminate\Http\Request $request) {
+        $token = env('DEBUG_TOKEN');
+        if (empty($token) || $request->query('token') !== $token) {
+            abort(404);
+        }
+
+        $result = ['app' => 'running'];
+
+        try {
+            \Illuminate\Support\Facades\DB::connection()->getPdo();
+            $result['database'] = 'ok';
+        } catch (\Exception $e) {
+            $result['database'] = 'error';
+            $result['db_message'] = $e->getMessage();
+        }
+
+        return response()->json($result);
+    });
