@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class InstallService
@@ -173,16 +174,28 @@ class InstallService
 
     public function testDatabaseConnection(array $config): bool
     {
+        $driver = $config['driver'] ?? env('DB_CONNECTION', 'mysql');
+
         try {
+            if ($driver === 'pgsql' || $driver === 'postgres') {
+                $dsn = "pgsql:host={$config['host']};port={$config['port']};dbname={$config['database']};";
+            } else {
+                $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']}";
+            }
+
             $connection = new \PDO(
-                "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']}",
-                $config['username'],
-                $config['password']
+                $dsn,
+                $config['username'] ?? null,
+                $config['password'] ?? null,
+                [\PDO::ATTR_TIMEOUT => 5]
             );
+
             $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
             return true;
-        } catch (\PDOException $e) {
+        } catch (\Throwable $e) {
+            Log::error('Database connection test failed: '.$e->getMessage());
+
             return false;
         }
     }
