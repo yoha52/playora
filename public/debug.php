@@ -11,6 +11,13 @@ $out['app_debug'] = getenv('APP_DEBUG');
 $out['env_file'] = file_exists(__DIR__.'/../.env') ? 'present' : 'missing';
 $out['app_key_env'] = getenv('APP_KEY') ? 'set' : 'missing';
 
+$out['extensions'] = [
+    'pdo' => extension_loaded('pdo'),
+    'pdo_pgsql' => extension_loaded('pdo_pgsql'),
+    'pdo_mysql' => extension_loaded('pdo_mysql'),
+    'pgsql' => extension_loaded('pgsql'),
+];
+
 // storage writable test
 try {
     $testPath = __DIR__.'/../storage/debug_write_test.txt';
@@ -49,6 +56,14 @@ try {
     if ($dsn) {
         $pdo = new PDO($dsn, $username, $password, [PDO::ATTR_TIMEOUT => 5]);
         $out['db_pdo'] = 'connected';
+
+        try {
+            $stmt = $pdo->query('SELECT current_user');
+            $current = $stmt ? $stmt->fetchColumn() : null;
+            $out['db_current_user'] = $current;
+        } catch (Throwable $e) {
+            $out['db_current_user_error'] = $e->getMessage();
+        }
     }
 } catch (Throwable $e) {
     $out['db_pdo'] = 'error';
