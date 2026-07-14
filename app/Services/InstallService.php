@@ -406,11 +406,22 @@ class InstallService
 
     public function clearCache(): void
     {
-        Artisan::call('config:clear');
-        Artisan::call('cache:clear');
-        Artisan::call('route:clear');
-        Artisan::call('view:clear');
-        Artisan::call('optimize');
-        Artisan::call('config:cache');
+        $commands = [
+            'config:clear',
+            'cache:clear',
+            'route:clear',
+            'view:clear',
+            'optimize',
+            'config:cache',
+        ];
+
+        foreach ($commands as $command) {
+            try {
+                Artisan::call($command);
+            } catch (\Throwable $e) {
+                // Ignore cache/optimize errors (e.g. missing DB cache table) during install
+                continue;
+            }
+        }
     }
 }
