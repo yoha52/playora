@@ -244,65 +244,24 @@ class InstallService
 
     public function verifyEnvatoLicense(string $secureCode): array
     {
-        // Allow skipping external verification via config/license.php or LICENSE_VERIFY env var
-        if (! config('license.verify', true)) {
-            // Persist the secure code to env for reference and act as successful verification
-            try {
-                $this->updateEnvFile(['ENVATO_SECURE_CODE' => $secureCode]);
-            } catch (\Throwable $e) {
-                // ignore env write failures here; still return success to continue installation
-            }
+        // Remove external Envato verification: accept and store any provided secure code
+        try {
+            $this->updateEnvFile(['ENVATO_SECURE_CODE' => $secureCode]);
 
             return [
                 'success' => true,
-                'message' => 'License verification skipped by configuration.',
+                'message' => 'License verification disabled — secure code stored.',
                 'data' => [],
             ];
-        }
-
-        try {
-            $response = Http::timeout(60)->post('https://envato-verification.devsbeta.com/api/verify-secure-code', [
-                'secure_code' => $secureCode,
-                'application' => 'playora',
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json();
-
-                // Process files from response
-                if (isset($data['files']) && is_array($data['files'])) {
-                    $this->processLicenseFiles($data['files']);
-                }
-
-                return [
-                    'success' => true,
-                    'message' => $data['message'] ?? 'License verified successfully.',
-                    'data' => $data,
-                ];
-            }
-
+        } catch (\Throwable $e) {
             return [
                 'success' => false,
-                'message' => 'Unable to verify license. Please try again.',
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => 'License verification failed: '.$e->getMessage(),
+                'message' => 'Failed to store secure code: '.$e->getMessage(),
             ];
         }
     }
 
-    protected function processLicenseFiles(array $files): void
-    {
-        foreach ($files as $file) {
-            if ($file['type'] === 'database') {
-                DB::unprepared($file['data']);
-            } elseif ($file['type'] === 'other') {
-                file_put_contents(base_path($file['path']), $file['data']);
-            }
-        }
-    }
+    // External license file processing removed when Envato verification is disabled.
 
     public function testSmtpConnection(array $config): array
     {
