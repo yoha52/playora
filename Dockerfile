@@ -1,4 +1,4 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
 WORKDIR /app
 
@@ -35,9 +35,12 @@ RUN mkdir -p storage/app/public storage/app/private storage/framework/cache stor
     && chmod -R 775 storage bootstrap/cache
 RUN php artisan storage:link || true
 
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+# RUN chmod +x /usr/local/bin/entrypoint.sh
 
-EXPOSE 8000
+# EXPOSE 8000
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+
+CMD php artisan serve --host=0.0.0.0 --port=$PORT
