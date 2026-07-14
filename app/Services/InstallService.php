@@ -244,6 +244,22 @@ class InstallService
 
     public function verifyEnvatoLicense(string $secureCode): array
     {
+        // Allow skipping external verification via config/license.php or LICENSE_VERIFY env var
+        if (! config('license.verify', true)) {
+            // Persist the secure code to env for reference and act as successful verification
+            try {
+                $this->updateEnvFile(['ENVATO_SECURE_CODE' => $secureCode]);
+            } catch (\Throwable $e) {
+                // ignore env write failures here; still return success to continue installation
+            }
+
+            return [
+                'success' => true,
+                'message' => 'License verification skipped by configuration.',
+                'data' => [],
+            ];
+        }
+
         try {
             $response = Http::timeout(60)->post('https://envato-verification.devsbeta.com/api/verify-secure-code', [
                 'secure_code' => $secureCode,
