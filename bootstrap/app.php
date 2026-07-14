@@ -23,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'install' => InstallMiddleware::class,
             'installed' => RedirectIfNotInstalled::class,
         ]);
+
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
