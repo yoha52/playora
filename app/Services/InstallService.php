@@ -120,10 +120,25 @@ class InstallService
         $permissions = [];
 
         foreach ($paths as $name => $path) {
+            $writable = false;
+
+            if ($name === '.env') {
+                $envPath = base_path('.env');
+                $parentDir = dirname($envPath);
+
+                if (! file_exists($envPath)) {
+                    $writable = is_dir($parentDir) && is_writable($parentDir);
+                } else {
+                    $writable = is_writable($envPath) || is_writable($parentDir);
+                }
+            } else {
+                $writable = is_writable($path);
+            }
+
             $permissions[$name] = [
                 'name' => $name,
                 'path' => $path,
-                'writable' => is_writable($path),
+                'writable' => $writable,
             ];
         }
 
