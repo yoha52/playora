@@ -218,7 +218,12 @@ class InstallService
     public function updateEnvFile(array $data): bool
     {
         $envPath = base_path('.env');
-        $envContent = file_get_contents($envPath);
+
+        if (! file_exists($envPath) && file_exists(base_path('.env.example'))) {
+            copy(base_path('.env.example'), $envPath);
+        }
+
+        $envContent = file_exists($envPath) ? file_get_contents($envPath) : '';
 
         foreach ($data as $key => $value) {
             $value = $this->escapeEnvValue($value);
