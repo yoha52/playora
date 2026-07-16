@@ -128,6 +128,13 @@ class InstallController extends Controller
             ])->withInput();
         }
 
+        // Run migrations before seeding and before admin setup
+        if (! $this->installService->runMigrations()) {
+            return back()->withErrors([
+                'secure_code' => 'Unable to run database migrations. Please check your database settings and try again.',
+            ])->withInput();
+        }
+
         // Run category seeder after license verification
         $this->installService->runSeeder();
 
@@ -210,6 +217,13 @@ class InstallController extends Controller
             'password' => Hash::make($validated['password']),
             'email_verified_at' => now(),
         ]);
+
+        // Ensure migrations are in place before creating the admin user
+        if (! $this->installService->runMigrations()) {
+            return back()->withErrors([
+                'name' => 'Database migrations are not complete. Please retry installation after verifying your database.',
+            ])->withInput();
+        }
 
         // Mark installation as complete
         $this->installService->createInstallFile();
